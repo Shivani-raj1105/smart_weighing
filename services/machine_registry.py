@@ -32,7 +32,8 @@ def update_state(machine_id, state):
     register_machine(machine_id)
 
     machines[machine_id]["state"] = state
-
+def machine_exists(machine_id):
+    return machine_id in machines
 
 def is_machine_online(machine_id):
     """
