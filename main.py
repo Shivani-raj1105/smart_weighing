@@ -9,9 +9,7 @@ app = FastAPI()
 def start_mqtt():
     start_mqtt_service()
 
-# -----------------------------
-# 1️⃣ Machine Status Endpoint
-# -----------------------------
+
 @app.get("/machine/{machine_id}/status")
 def machine_status(machine_id: str):
 
@@ -29,9 +27,6 @@ def machine_status(machine_id: str):
     }
 
 
-# -----------------------------
-# 2️⃣ Create Payment Order
-# -----------------------------
 @app.post("/create-order")
 def create_payment_order(machine_id: str, amount: int):
 
@@ -43,9 +38,7 @@ def create_payment_order(machine_id: str, amount: int):
     }
 
 
-# -----------------------------
-# 3️⃣ Payment Webhook
-# -----------------------------
+
 @app.post("/payment-webhook")
 def payment_webhook(payment_id: str, machine_id: str):
 
@@ -58,9 +51,6 @@ def payment_webhook(payment_id: str, machine_id: str):
     }
 
 
-# -----------------------------
-# 4️⃣ Activate Machine (Testing)
-# -----------------------------
 @app.post("/activate-machine")
 def activate_machine(machine_id: str, duration: int = 10):
 
@@ -69,9 +59,6 @@ def activate_machine(machine_id: str, duration: int = 10):
     return result
 
 
-# -----------------------------
-# 5️⃣ Transaction Status
-# -----------------------------
 @app.get("/transaction/{transaction_id}")
 def transaction_status(transaction_id: str):
 
