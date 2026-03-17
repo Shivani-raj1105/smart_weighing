@@ -38,6 +38,7 @@ def on_connect(client, userdata, flags, rc):
 
 
 def on_message(client, userdata, msg):
+    print("MQTT message received:", msg.topic, msg.payload)
     try:
         topic_parts = msg.topic.split("/")
         machine_id = topic_parts[1]
