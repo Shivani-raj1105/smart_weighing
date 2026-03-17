@@ -6,7 +6,7 @@ from services.machine_registry import update_state, update_heartbeat
 BROKER = "localhost"
 PORT = 1883
 
-from services.mqtt_topics import command_topic, status_topic, all_status_topics
+from services.mqtt_topics import command_topic, status_topic, all_status_topics,all_heartbeat_topics
 from services.activity_log import log_event
 client = mqtt.Client()
 from services.machine_registry import (
@@ -35,6 +35,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connected to MQTT broker")
 
     client.subscribe(all_status_topics())
+    client.subscribe(all_heartbeat_topics())
 
 
 def on_message(client, userdata, msg):
