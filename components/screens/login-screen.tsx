@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useAppContext } from "@/lib/app-context"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 interface LoginScreenProps {
   onRegister: () => void
@@ -39,21 +41,33 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
     }, 1000)
   }
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
+  try {
+    console.log("GOOGLE CLICKED") // debug
+
     setIsLoading(true)
-    setTimeout(() => {
-      setUser({
-        id: "1",
-        name: "John Doe",
-        email: "john@gmail.com",
-        phone: "+1 234 567 8900",
-        age: 30,
-        sex: "male",
-      })
-      setIsAuthenticated(true)
-      setIsLoading(false)
-    }, 1000)
+
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth, provider)
+
+    const user = result.user
+
+    setUser({
+      id: user.uid,
+      name: user.displayName || "",
+      email: user.email || "",
+      phone: user.phoneNumber || "",
+      age: 0,
+      
+    })
+
+    setIsAuthenticated(true)
+  } catch (error) {
+    console.error("Google Auth Error:", error)
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return (
     <motion.div
@@ -62,7 +76,7 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
       animate={{ opacity: 1 }}
     >
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
 
       <motion.div
         className="w-full max-w-sm relative z-10"
