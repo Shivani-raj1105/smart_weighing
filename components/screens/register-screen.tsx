@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Scale, Mail, Lock, User, Phone, Calendar, Users, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,6 +17,7 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
   const [phone, setPhone] = useState("")
   const [age, setAge] = useState("")
   const [sex, setSex] = useState<"male" | "female" | "other" | "">("")
+  const [height, setHeight] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -33,7 +33,8 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
       email,
       phone,
       age: parseInt(age),
-      sex
+      sex,
+      height: parseFloat(height)
     }))
     setTimeout(() => {
       setIsLoading(false)
@@ -62,10 +63,9 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors relative z-10"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors relative z-10"
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back</span>
+        Back
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center relative z-10 py-6">
@@ -77,11 +77,12 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-6">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4">
-              <Scale className="w-7 h-7 text-primary-foreground" />
-            </div>
+            <img
+              src="/placeholder-logo.png"
+              alt="Smart Weighing Logo"
+              className="w-14 h-14 object-contain mb-4"
+            />
             <h1 className="text-2xl font-bold text-foreground">Create Account</h1>
-            <p className="text-muted-foreground text-sm">Join WeighScale Pro</p>
           </div>
 
           <Card className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -90,49 +91,40 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
                 {/* Name */}
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder="Enter your name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="pl-10 bg-secondary/50 border-border/50"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-secondary/50 border-border/50"
+                    required
+                  />
                 </div>
 
                 {/* Email */}
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Email ID</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-secondary/50 border-border/50"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="bg-secondary/50 border-border/50"
+                    required
+                  />
                 </div>
 
                 {/* Phone */}
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Phone Number</label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="pl-10 bg-secondary/50 border-border/50"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="bg-secondary/50 border-border/50"
+                    required
+                  />
                 </div>
 
                 {/* Age and Sex Row */}
@@ -140,92 +132,98 @@ export function RegisterScreen({ onBack, onVerify }: RegisterScreenProps) {
                   {/* Age */}
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Age</label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        placeholder="Age"
-                        value={age}
-                        onChange={(e) => setAge(e.target.value)}
-                        className="pl-10 bg-secondary/50 border-border/50"
-                        min="1"
-                        max="150"
-                        required
-                      />
-                    </div>
+                    <Input
+                      type="number"
+                      placeholder="Age"
+                      value={age}
+                      onChange={(e) => setAge(e.target.value)}
+                      className="bg-secondary/50 border-border/50"
+                      min="1"
+                      max="150"
+                      required
+                    />
                   </div>
 
                   {/* Sex */}
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Sex</label>
-                    <div className="relative">
-                      <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <select
-                        value={sex}
-                        onChange={(e) => setSex(e.target.value as "male" | "female" | "other")}
-                        className="w-full h-9 pl-10 pr-3 rounded-md bg-secondary/50 border border-border/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        required
-                      >
-                        <option value="" disabled>Select</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
+                    <select
+                      value={sex}
+                      onChange={(e) => setSex(e.target.value as "male" | "female" | "other")}
+                      className="w-full h-9 rounded-md bg-secondary/50 border border-border/50 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      required
+                    >
+                      <option value="" disabled>Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
                 </div>
 
                 {/* Password */}
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">New Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="password"
-                      placeholder="Create a password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 bg-secondary/50 border-border/50"
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Create a password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-secondary/50 border-border/50"
+                    required
+                  />
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
                   <label className="text-sm text-muted-foreground">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`pl-10 bg-secondary/50 border-border/50 ${
-                        confirmPassword && password !== confirmPassword
-                          ? "border-destructive"
-                          : ""
-                      }`}
-                      required
-                    />
-                  </div>
+                  <Input
+                    type="password"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`bg-secondary/50 border-border/50 ${
+                      confirmPassword && password !== confirmPassword
+                        ? "border-destructive"
+                        : ""
+                    }`}
+                    required
+                  />
                   {confirmPassword && password !== confirmPassword && (
                     <p className="text-xs text-destructive">Passwords do not match</p>
                   )}
+                </div>
+
+                {/* Height */}
+                <div className="space-y-2">
+                  <label className="text-sm text-muted-foreground">Height (cm)</label>
+                  <Input
+                    type="number"
+                    placeholder="Enter your height"
+                    value={height}
+                    onChange={(e) => setHeight(e.target.value)}
+                    className="bg-secondary/50 border-border/50"
+                    min="0"
+                    required
+                  />
                 </div>
 
                 {/* Register Button */}
                 <Button
                   type="submit"
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground mt-2"
-                  disabled={isLoading || (confirmPassword !== "" && password !== confirmPassword)}
+                  disabled={
+                    isLoading ||
+                    (confirmPassword !== "" && password !== confirmPassword) ||
+                    !height
+                  }
                 >
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
 
               {/* Divider */}
-              <div className="flex items-center gap-4 my-6">
+                <div className="flex items-center gap-4 my-6">
                 <div className="flex-1 h-px bg-border/50" />
                 <span className="text-xs text-muted-foreground">or</span>
                 <div className="flex-1 h-px bg-border/50" />

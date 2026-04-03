@@ -1,35 +1,105 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { Scale, History, Settings, Shield, HelpCircle, LogOut } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useToast } from "@/components/ui/use-toast"
 import { useAppContext } from "@/lib/app-context"
-import { 
-  User, 
-  Mail, 
-  Settings, 
-  Shield, 
-  HelpCircle, 
-  LogOut,
-  ChevronRight,
-  Scale,
-  History,
-  ArrowLeft,
-  Phone,
-  Calendar,
-  Users
-} from "lucide-react"
+import { auth, sendEmailVerificationToCurrentUser, updateUserEmail } from "@/lib/firebase"
 
 type ActiveSection = null | "account" | "privacy" | "help"
 
-export function ProfileScreen() {
+interface ProfileScreenProps {
+  onSaveSuccess?: () => void
+}
+
+export function ProfileScreen({ onSaveSuccess }: ProfileScreenProps) {
   const { user, setIsAuthenticated, setUser, measurementHistory } = useAppContext()
+  const { toast } = useToast()
   const [activeSection, setActiveSection] = useState<ActiveSection>(null)
+  const [editMode, setEditMode] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const [nameField, setNameField] = useState("")
+  const [emailField, setEmailField] = useState("")
+  const [phoneField, setPhoneField] = useState("")
+  const [ageField, setAgeField] = useState("")
+  const [sexField, setSexField] = useState<"male" | "female" | "other" | "">("")
+  const [heightField, setHeightField] = useState("")
+
+  useEffect(() => {
+    if (!user) return
+    setNameField(user.name || "")
+    setEmailField(user.email || "")
+    setPhoneField(user.phone || "")
+    setAgeField(user.age?.toString() || "")
+    setSexField(user.sex || "")
+    setHeightField(user.height?.toString() || "")
+  }, [user])
 
   const handleLogout = () => {
     setIsAuthenticated(false)
     setUser(null)
+  }
+
+  const handleSaveProfile = async () => {
+    if (!user) return
+
+    const hasFirebaseUser = Boolean(auth.currentUser)
+
+    setSaving(true)
+
+    try {
+      let updatedEmail = user.email
+
+      if (emailField && emailField !== user.email) {
+        if (hasFirebaseUser) {
+          if (!auth.currentUser?.emailVerified) {
+            await sendEmailVerificationToCurrentUser(auth.currentUser)
+            toast({
+              title: "Email verification required",
+              description: "Please verify your current email address before changing it. A verification email was sent.",
+            })
+            // keep existing email until user verifies
+          } else {
+            await updateUserEmail(auth.currentUser, emailField)
+            await sendEmailVerificationToCurrentUser(auth.currentUser)
+            updatedEmail = emailField
+            toast({
+              title: "Email change requested",
+              description: "A verification email was sent to your new email address.",
+            })
+          }
+        } else {
+          updatedEmail = emailField
+          toast({
+            title: "Email updated locally",
+            description: "Profile email was updated in app state.",
+          })
+        }
+      }
+
+      setUser({
+        ...user,
+        name: nameField,
+        email: updatedEmail,
+        phone: phoneField,
+        age: Number(ageField) || undefined,
+        sex: sexField as "male" | "female" | "other",
+        height: Number(heightField) || undefined,
+      })
+
+      toast({ title: "Saved", description: "Profile settings updated successfully." })
+      setEditMode(false)
+      onSaveSuccess?.()
+    } catch (err: any) {
+      toast({ title: "Update failed", description: err?.message || "Please try again." })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const stats = [
@@ -65,55 +135,148 @@ export function ProfileScreen() {
     >
       <button
         onClick={() => setActiveSection(null)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back to Profile</span>
+        Back to Profile
       </button>
 
-      <h2 className="text-xl font-bold text-foreground">Account Settings</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-foreground">Account Settings</h2>
+        <Button
+          size="sm"
+          variant={editMode ? "secondary" : "outline"}
+          onClick={() => {
+            if (!user) return
+            if (!editMode) {
+              setEditMode(true)
+            } else {
+              setEditMode(false)
+            }
+          }}
+        >
+          {editMode ? "Cancel" : "Edit"}
+        </Button>
+      </div>
 
       <Card className="bg-card/30 backdrop-blur-sm border-border/30">
         <CardContent className="p-4 space-y-4">
-          <div className="flex items-center gap-3 py-2 border-b border-border/30">
-            <User className="w-5 h-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Full Name</p>
-              <p className="text-foreground">{user?.name || "Not set"}</p>
-            </div>
-          </div>
+          {editMode ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Full Name</label>
+                <Input
+                  value={nameField}
+                  onChange={(e) => setNameField(e.target.value)}
+                  placeholder="Full Name"
+                />
+              </div>
 
-          <div className="flex items-center gap-3 py-2 border-b border-border/30">
-            <Mail className="w-5 h-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Email Address</p>
-              <p className="text-foreground">{user?.email || "Not set"}</p>
-            </div>
-          </div>
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Email Address</label>
+                <Input
+                  type="email"
+                  value={emailField}
+                  onChange={(e) => setEmailField(e.target.value)}
+                  placeholder="Email Address"
+                />
+                {!auth.currentUser?.emailVerified && (
+                  <p className="text-xs text-warning">Please verify your current email before making email changes. If you already requested verification, complete it from your inbox.</p>
+                )}
+              </div>
 
-          <div className="flex items-center gap-3 py-2 border-b border-border/30">
-            <Phone className="w-5 h-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Phone Number</p>
-              <p className="text-foreground">{user?.phone || "Not set"}</p>
-            </div>
-          </div>
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Phone Number</label>
+                <Input
+                  type="tel"
+                  value={phoneField}
+                  onChange={(e) => setPhoneField(e.target.value)}
+                  placeholder="Phone Number"
+                />
+              </div>
 
-          <div className="flex items-center gap-3 py-2 border-b border-border/30">
-            <Calendar className="w-5 h-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Age</p>
-              <p className="text-foreground">{user?.age ? `${user.age} years` : "Not set"}</p>
-            </div>
-          </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Age</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={150}
+                    value={ageField}
+                    onChange={(e) => setAgeField(e.target.value)}
+                    placeholder="Age"
+                  />
+                </div>
 
-          <div className="flex items-center gap-3 py-2">
-            <Users className="w-5 h-5 text-muted-foreground" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">Sex</p>
-              <p className="text-foreground capitalize">{user?.sex || "Not set"}</p>
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Sex</label>
+                  <select
+                    value={sexField}
+                    onChange={(e) => setSexField(e.target.value as "male" | "female" | "other")}
+                    className="w-full h-9 px-3 rounded-md bg-secondary/50 border border-border/50 text-foreground text-sm"
+                  >
+                    <option value="" disabled>Select sex</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">Height (cm)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={heightField}
+                  onChange={(e) => setHeightField(e.target.value)}
+                  placeholder="Height"
+                />
+              </div>
+
+              <Button
+                className="w-full"
+                onClick={handleSaveProfile}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="py-2 border-b border-border/30">
+                <p className="text-xs text-muted-foreground">Full Name</p>
+                <p className="text-foreground">{user?.name || "Not set"}</p>
+              </div>
+
+              <div className="py-2 border-b border-border/30">
+                <p className="text-xs text-muted-foreground">Email Address</p>
+                <p className="text-foreground">{user?.email || "Not set"}</p>
+                <p className={`text-xs mt-1 ${auth.currentUser?.emailVerified ? "text-emerald-500" : "text-amber-500"}`}>
+                  {auth.currentUser?.emailVerified ? "Verified" : "Unverified"}
+                </p>
+              </div>
+
+              <div className="py-2 border-b border-border/30">
+                <p className="text-xs text-muted-foreground">Phone Number</p>
+                <p className="text-foreground">{user?.phone || "Not set"}</p>
+              </div>
+
+              <div className="py-2 border-b border-border/30">
+                <p className="text-xs text-muted-foreground">Age</p>
+                <p className="text-foreground">{user?.age ? `${user.age} years` : "Not set"}</p>
+              </div>
+
+              <div className="py-2 border-b border-border/30">
+                <p className="text-xs text-muted-foreground">Sex</p>
+                <p className="text-foreground capitalize">{user?.sex || "Not set"}</p>
+              </div>
+
+              <div className="py-2">
+                <p className="text-xs text-muted-foreground">Height</p>
+                <p className="text-foreground">{user?.height ? `${user.height} cm` : "Not set"}</p>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </motion.div>
@@ -129,10 +292,9 @@ export function ProfileScreen() {
     >
       <button
         onClick={() => setActiveSection(null)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back to Profile</span>
+        Back to Profile
       </button>
 
       <h2 className="text-xl font-bold text-foreground">Privacy & Security</h2>
@@ -163,10 +325,9 @@ export function ProfileScreen() {
     >
       <button
         onClick={() => setActiveSection(null)}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back to Profile</span>
+        Back to Profile
       </button>
 
       <h2 className="text-xl font-bold text-foreground">Help & Support</h2>
@@ -220,15 +381,14 @@ export function ProfileScreen() {
                     <div className="flex items-center gap-4">
                       {/* Avatar */}
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                        <User className="w-8 h-8 text-primary-foreground" />
+                        <span className="text-xl font-bold text-primary-foreground">U</span>
                       </div>
 
                       {/* User Info */}
                       <div className="flex-1">
                         <h2 className="text-xl font-bold text-foreground">{user?.name || "User"}</h2>
-                        <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                          <Mail className="w-3 h-3" />
-                          <span>{user?.email || "user@example.com"}</span>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {user?.email || "user@example.com"}
                         </div>
                       </div>
                     </div>
@@ -246,9 +406,11 @@ export function ProfileScreen() {
                 {stats.map((stat, index) => (
                   <Card key={index} className="bg-card/30 backdrop-blur-sm border-border/30">
                     <CardContent className="p-4 text-center">
-                      <stat.icon className={`w-5 h-5 mx-auto mb-2 ${stat.color}`} />
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <stat.icon className="w-4 h-4 text-primary-foreground" />
+                        <p className={`text-xs font-semibold ${stat.color}`}>{stat.label}</p>
+                      </div>
                       <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground">{stat.label}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -270,52 +432,19 @@ export function ProfileScreen() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center">
-                            <item.icon className="w-5 h-5 text-muted-foreground" />
-                          </div>
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
                           <div>
                             <p className="font-medium text-foreground">{item.label}</p>
                             <p className="text-xs text-muted-foreground">{item.desc}</p>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </motion.div>
 
-              {/* Preferences */}
-              <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h3 className="text-sm font-medium text-muted-foreground mb-3">Preferences</h3>
-                <Card className="bg-card/30 backdrop-blur-sm border-border/30">
-                  <CardContent className="divide-y divide-border/30">
-                    {[
-                      { label: "Dark Mode", value: true },
-                      { label: "Sound Effects", value: true },
-                      { label: "Haptic Feedback", value: false },
-                      { label: "Auto-save Readings", value: true },
-                    ].map((pref, index) => (
-                      <div key={index} className="flex items-center justify-between py-3 first:pt-4 last:pb-4">
-                        <span className="text-sm text-foreground">{pref.label}</span>
-                        <div className={`w-10 h-6 rounded-full relative cursor-pointer transition-colors ${
-                          pref.value ? "bg-primary/20" : "bg-secondary/50"
-                        }`}>
-                          <div className={`absolute top-0.5 w-5 h-5 rounded-full transition-all ${
-                            pref.value 
-                              ? "right-0.5 bg-primary" 
-                              : "left-0.5 bg-muted-foreground"
-                          }`} />
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
+
 
               {/* App Info */}
               <motion.div

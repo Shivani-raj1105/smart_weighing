@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Scale } from "lucide-react"
 import { useEffect } from "react"
 
 interface SplashScreenProps {
@@ -42,8 +41,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
       >
-        <motion.div
-          className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-6"
+        <motion.img
+          src="/placeholder-logo.png"
+          alt="Smart Weighing Logo"
+          className="w-24 h-24 object-contain mb-6"
           animate={{
             boxShadow: [
               "0 0 20px rgba(0, 229, 255, 0.3)",
@@ -52,9 +53,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             ],
           }}
           transition={{ duration: 2, repeat: Infinity }}
-        >
-          <Scale className="w-12 h-12 text-primary-foreground" />
-        </motion.div>
+        />
 
         <motion.h1
           className="text-3xl font-bold text-foreground mb-2"

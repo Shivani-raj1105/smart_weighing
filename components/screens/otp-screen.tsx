@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { useState, useRef, useEffect } from "react"
-import { Scale, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useAppContext } from "@/lib/app-context"
@@ -62,6 +62,7 @@ export function OTPScreen({ email, onBack }: OTPScreenProps) {
         phone: "",
         age: undefined as number | undefined,
         sex: undefined as "male" | "female" | "other" | undefined,
+        height: undefined as number | undefined,
       }
       
       if (registerDataStr) {
@@ -73,6 +74,7 @@ export function OTPScreen({ email, onBack }: OTPScreenProps) {
           phone: registerData.phone || "",
           age: registerData.age,
           sex: registerData.sex,
+          height: registerData.height,
         }
         sessionStorage.removeItem("registerData")
       }
@@ -101,10 +103,10 @@ export function OTPScreen({ email, onBack }: OTPScreenProps) {
       {/* Back Button */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors relative z-10"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors relative z-10"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm">Back</span>
+        Back
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center relative z-10">
@@ -116,9 +118,11 @@ export function OTPScreen({ email, onBack }: OTPScreenProps) {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4">
-              <Scale className="w-7 h-7 text-primary-foreground" />
-            </div>
+            <img
+              src="/placeholder-logo.png"
+              alt="Smart Weighing Logo"
+              className="w-14 h-14 object-contain mb-4"
+            />
             <h1 className="text-2xl font-bold text-foreground">Verify Account</h1>
             <p className="text-muted-foreground text-sm text-center mt-2">
               Enter the 6-digit verification code

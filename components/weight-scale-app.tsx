@@ -70,7 +70,7 @@ function AppContent() {
       case "history":
         return <HistoryScreen />
       case "profile":
-        return <ProfileScreen />
+        return <ProfileScreen onSaveSuccess={() => setActiveTab("home")} />
       default:
         return <HomeScreen />
     }

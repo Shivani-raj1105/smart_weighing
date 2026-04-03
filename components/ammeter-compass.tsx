@@ -9,30 +9,19 @@ interface AmmeterCompassProps {
   minWeight?: number
   status?: "stable" | "measuring" | "overload" | "disconnected"
 }
-
 export function AmmeterCompass({
   weight,
   maxWeight = 200,
   minWeight = 0,
   status = "stable",
 }: AmmeterCompassProps) {
-
   const centerX = 150
   const centerY = 150
-
-  // ✅ Needle angle (compressed range)
-  // ✅ Needle angle (Adjusted to point UP at the arc)
-  // ✅ Needle angle (Adjusted to point UP at the arc)
   const needleAngle = useMemo(() => {
     const clampedWeight = Math.max(minWeight, Math.min(weight, maxWeight));
     const percentage = (clampedWeight - minWeight) / (maxWeight - minWeight);
-
-    // 180 is the total sweep of your arc
-    // + 90 shifts the "downward" needle to the left (9 o'clock) for 0kg
     return (percentage * 180) + 90;
   }, [weight, maxWeight, minWeight]);
-
-  // Dynamic glow color
   const getGradientColor = useMemo(() => {
     const percentage = Math.min(weight / maxWeight, 1)
     const g = Math.round(229 - percentage * (229 - 60))

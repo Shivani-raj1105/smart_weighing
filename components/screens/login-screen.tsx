@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion"
 import { useState } from "react"
-import { Scale, Mail, Lock, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -35,6 +34,7 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
         phone: "+1 234 567 8900",
         age: 30,
         sex: "male",
+        height: 170,
       })
       setIsAuthenticated(true)
       setIsLoading(false)
@@ -42,28 +42,50 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
   }
 
   const handleGoogleSignIn = async () => {
+  if (isLoading) return // prevent spam clicks
+
   try {
-    console.log("GOOGLE CLICKED") // debug
+    console.log("GOOGLE CLICKED")
 
     setIsLoading(true)
 
     const provider = new GoogleAuthProvider()
-    const result = await signInWithPopup(auth, provider)
 
-    const user = result.user
+    const result = await signInWithPopup(auth, provider)
+    const firebaseUser = result.user
 
     setUser({
-      id: user.uid,
-      name: user.displayName || "",
-      email: user.email || "",
-      phone: user.phoneNumber || "",
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || "",
+      email: firebaseUser.email || "",
+      phone: firebaseUser.phoneNumber || "",
       age: 0,
-      
+      height: 0,
     })
 
     setIsAuthenticated(true)
-  } catch (error) {
+
+  } catch (error: any) {
+    // 🔥 HANDLE KNOWN CASES CLEANLY
+
+    if (error.code === "auth/popup-closed-by-user") {
+      console.log("User closed popup — ignore")
+      return
+    }
+
+    if (error.code === "auth/cancelled-popup-request") {
+      console.log("Popup request cancelled — ignore")
+      return
+    }
+
+    if (error.code === "auth/popup-blocked") {
+      alert("Popup blocked. Please allow popups for this site.")
+      return
+    }
+
+    // ❗ REAL ERROR
     console.error("Google Auth Error:", error)
+
   } finally {
     setIsLoading(false)
   }
@@ -86,9 +108,11 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
       >
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4">
-            <Scale className="w-8 h-8 text-primary-foreground" />
-          </div>
+          <img
+            src="/placeholder-logo.png"
+            alt="Smart Weighing Logo"
+            className="w-16 h-16 object-contain mb-4"
+          />
           <h1 className="text-2xl font-bold text-foreground">Welcome Back</h1>
           <p className="text-muted-foreground text-sm">Sign in to continue</p>
         </div>
@@ -99,38 +123,32 @@ export function LoginScreen({ onRegister, onForgotPassword }: LoginScreenProps) 
               {/* Email */}
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">Email</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-secondary/50 border-border/50"
-                  />
-                </div>
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-secondary/50 border-border/50"
+                />
               </div>
 
               {/* Password */}
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-secondary/50 border-border/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-secondary/50 border-border/50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
               </div>
 
               {/* Forgot Password */}

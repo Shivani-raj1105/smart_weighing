@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Home, BarChart3, History, User } from "lucide-react"
+import { Home, BarChart3, Clock, User } from "lucide-react"
 
 interface BottomNavigationProps {
   activeTab: string
@@ -11,7 +11,7 @@ interface BottomNavigationProps {
 const tabs = [
   { id: "home", icon: Home, label: "Home" },
   { id: "analytics", icon: BarChart3, label: "Analytics" },
-  { id: "history", icon: History, label: "History" },
+  { id: "history", icon: Clock, label: "History" },
   { id: "profile", icon: User, label: "Profile" },
 ]
 
@@ -43,11 +43,7 @@ export function BottomNavigation({ activeTab, onTabChange }: BottomNavigationPro
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
-                <Icon
-                  className={`w-5 h-5 transition-colors ${
-                    isActive ? "text-primary" : "text-muted-foreground"
-                  }`}
-                />
+                {Icon && <Icon className={`w-5 h-5 mb-1 ${isActive ? "text-primary" : "text-muted-foreground"}`} />}
               </motion.div>
               <span
                 className={`text-[10px] font-medium transition-colors ${

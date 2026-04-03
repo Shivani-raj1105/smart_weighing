@@ -2,7 +2,11 @@
 
 import { createContext, useContext, useState, ReactNode } from "react"
 
-export type MeasurementStatus = "stable" | "measuring" | "overload" | "disconnected"
+export type MeasurementStatus =
+  | "stable"
+  | "measuring"
+  | "overload"
+  | "disconnected"
 
 export interface MeasurementReading {
   id: string
@@ -37,31 +41,28 @@ export interface User {
   phone?: string
   age?: number
   sex?: "male" | "female" | "other"
+  height?: number
   avatar?: string
 }
 
 interface AppContextType {
-  // Auth state
   isAuthenticated: boolean
   user: User | null
   setIsAuthenticated: (value: boolean) => void
   setUser: (user: User | null) => void
-  
-  // Weight state
+
   currentWeight: number
   setCurrentWeight: (weight: number) => void
   measurementStatus: MeasurementStatus
   setMeasurementStatus: (status: MeasurementStatus) => void
-  
-  // History
+
   measurementHistory: MeasurementReading[]
   addMeasurement: (reading: Omit<MeasurementReading, "id">) => void
-  
-  // Devices
+  removeLastMeasurement: () => void
+
   devices: Device[]
   setDevices: (devices: Device[]) => void
-  
-  // Alerts
+
   alerts: Alert[]
   addAlert: (alert: Omit<Alert, "id">) => void
   markAlertRead: (id: string) => void
@@ -95,19 +96,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [currentWeight, setCurrentWeight] = useState(0)
-  const [measurementStatus, setMeasurementStatus] = useState<MeasurementStatus>("stable")
-  const [measurementHistory, setMeasurementHistory] = useState<MeasurementReading[]>(mockHistory)
+  const [measurementStatus, setMeasurementStatus] =
+    useState<MeasurementStatus>("stable")
+
+  // ✅ Ensure initial data is sorted (latest first)
+  const [measurementHistory, setMeasurementHistory] =
+    useState<MeasurementReading[]>(
+      [...mockHistory].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() -
+          new Date(a.timestamp).getTime()
+      )
+    )
+
   const [devices, setDevices] = useState<Device[]>(mockDevices)
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
 
+  // ✅ Always insert newest at top + keep sorted
   const addMeasurement = (reading: Omit<MeasurementReading, "id">) => {
     const newReading: MeasurementReading = {
       ...reading,
       id: Date.now().toString(),
     }
-    setMeasurementHistory((prev) => [newReading, ...prev])
-  }
 
+    setMeasurementHistory((prev) =>
+      [newReading, ...prev].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() -
+          new Date(a.timestamp).getTime()
+      )
+    )
+  }
+  // ✅ Instantly removes the top item from Recent Activity
+  // ✅ Instantly removes the top item from Recent Activity
+  const removeLastMeasurement = () => {
+    setMeasurementHistory((prev) => {
+      if (prev.length === 0) return prev;
+      
+      console.log("🗑️ TARE CLICKED: Deleting record ->", prev[0].weight, "kg");
+      
+      // Grabs the ID of the top item and filters it out
+      const idToRemove = prev[0].id;
+      return prev.filter(item => item.id !== idToRemove);
+    });
+  }
   const addAlert = (alert: Omit<Alert, "id">) => {
     const newAlert: Alert = {
       ...alert,
@@ -115,10 +147,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     setAlerts((prev) => [newAlert, ...prev])
   }
-
   const markAlertRead = (id: string) => {
     setAlerts((prev) =>
-      prev.map((alert) => (alert.id === id ? { ...alert, read: true } : alert))
+      prev.map((alert) =>
+        alert.id === id ? { ...alert, read: true } : alert
+      )
     )
   }
 
@@ -139,6 +172,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setMeasurementStatus,
         measurementHistory,
         addMeasurement,
+        removeLastMeasurement,
         devices,
         setDevices,
         alerts,
@@ -154,7 +188,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useAppContext() {
   const context = useContext(AppContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAppContext must be used within an AppProvider")
   }
   return context

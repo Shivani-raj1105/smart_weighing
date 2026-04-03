@@ -1,15 +1,64 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle2, QrCode } from "lucide-react"
 
 interface QRPaymentScreenProps {
   onPaymentDone: () => void
 }
 
 export function QRPaymentScreen({ onPaymentDone }: QRPaymentScreenProps) {
+  const [isWaiting, setIsWaiting] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(30)
+
+  useEffect(() => {
+    if (isWaiting && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
+      return () => clearTimeout(timer)
+    } else if (isWaiting && timeLeft === 0) {
+      setIsWaiting(false)
+      onPaymentDone()
+    }
+  }, [isWaiting, timeLeft, onPaymentDone])
+
+  const handlePaymentDone = () => {
+    setIsWaiting(true)
+    setTimeLeft(30)
+  }
+
+  if (isWaiting) {
+    return (
+      <motion.div
+        className="min-h-screen flex flex-col items-center justify-center p-6"
+        style={{
+          background: "radial-gradient(ellipse at center top, oklch(12% 0.03 220) 0%, oklch(8% 0.02 250) 70%)",
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="w-full max-w-sm text-center"
+        >
+          <p className="text-xl font-semibold text-green-600 mb-2">
+            PAYMENT VERIFIED :)
+          </p>
+          <p className="text-2xl font-bold text-foreground mb-4">
+            PLEASE STAND ON THE MACHINE NOW
+          </p>
+          <p className="text-lg text-muted-foreground">
+            Time remaining: {timeLeft} seconds
+          </p>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
       className="min-h-screen flex flex-col items-center justify-center p-6"
@@ -139,7 +188,6 @@ export function QRPaymentScreen({ onPaymentDone }: QRPaymentScreenProps) {
 
         {/* Payment Instructions */}
         <div className="flex items-center justify-center gap-2 mb-6">
-          <QrCode className="w-4 h-4 text-muted-foreground" />
           <p className="text-xs text-muted-foreground text-center">
             Use any UPI app to scan and pay
           </p>
@@ -153,9 +201,8 @@ export function QRPaymentScreen({ onPaymentDone }: QRPaymentScreenProps) {
         >
           <Button
             className="w-full h-14 text-lg gap-3 bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={onPaymentDone}
+            onClick={handlePaymentDone}
           >
-            <CheckCircle2 className="w-5 h-5" />
             Payment Done
           </Button>
         </motion.div>
