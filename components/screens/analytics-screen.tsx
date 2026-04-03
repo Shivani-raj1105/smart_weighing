@@ -26,7 +26,6 @@ export function AnalyticsScreen() {
   const { measurementHistory } = useAppContext()
   const [timeRange, setTimeRange] = useState<TimeRange>("weekly")
 
-  // Generate chart data from history
   const chartData = useMemo(() => {
     const now = new Date()
     const data = []
@@ -83,7 +82,6 @@ export function AnalyticsScreen() {
     return data
   }, [measurementHistory, timeRange])
 
-  // Calculate statistics
   const stats = useMemo(() => {
     const weights = measurementHistory.map((r) => r.weight)
     const avg = weights.length > 0 
@@ -95,7 +93,6 @@ export function AnalyticsScreen() {
     const stableCount = measurementHistory.filter((r) => r.status === "stable").length
     const accuracy = total > 0 ? (stableCount / total) * 100 : 0
     
-    // Trend calculation (comparing recent vs older)
     const recent = measurementHistory.slice(0, Math.ceil(measurementHistory.length / 2))
     const older = measurementHistory.slice(Math.ceil(measurementHistory.length / 2))
     const recentAvg = recent.length > 0 
